@@ -39,7 +39,6 @@ For less tracking and a lighter client: **NoTrack**, **ClearURLs**, **ConsoleJan
 
 ## Credits
 
-- Made by Mihai.
 - Colour inspiration: Claude's interface palette.
 - Floating-panel layout selectors and Discord colour-variable mapping adapted from [midnight-discord](https://github.com/refact0r/midnight-discord) by refact0r (MIT).
 
