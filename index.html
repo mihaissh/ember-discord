@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ember Configurator</title>
+<meta name="description" content="Configure the Ember Discord theme: pick what to hide, the layout and colours, then copy a QuickCSS snippet or download your own theme file.">
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #090807;
+    --panel: #151412;
+    --panel-2: #1c1a18;
+    --line: hsla(28, 14%, 60%, 0.12);
+    --ink: #f7f4ed;
+    --ink-2: #bdb8ac;
+    --ink-3: #7b766c;
+    --clay: #d97757;
+    --radius: 14px;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink); }
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: var(--clay); }
+  header.site {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    max-width: 1180px; width: 100%; margin: 0 auto; padding: 24px 16px 8px;
+  }
+  header.site h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+  header.site p { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+    padding: 9px 14px; border-radius: 999px; font: inherit; font-size: 14px;
+  }
+  .btn:hover { background: #262421; }
+  .btn.primary { background: var(--clay); border-color: transparent; color: #140c08; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  main { flex: 1; max-width: 1180px; width: 100%; margin: 0 auto; padding: 8px 16px 32px; }
+
+  /* ── live preview: a miniature Discord built from the same variables ── */
+  .stage {
+    --gap: 10px; --card-radius: 18px; --card-radius-inner: 6px; --card-gap: 3px;
+    --card-bg: #151412; --canvas: #090807; --accent: #d97757; --header-height: 44px;
+    --text-1: #f7f4ed; --text-3: #bdb8ac; --text-4: #7b766c; --line: hsla(28, 14%, 60%, 0.06);
+    position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+    background: var(--canvas); aspect-ratio: 16 / 9; min-height: 340px;
+    display: grid; grid-template-columns: 56px 190px 1fr 170px; gap: var(--gap); padding: var(--gap);
+    font-size: 12px; color: var(--text-3);
+  }
+  .stage.glow {
+    background:
+      radial-gradient(60% 60% at 0% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 62%),
+      radial-gradient(50% 50% at 100% 100%, color-mix(in srgb, var(--accent) 4.5%, transparent), transparent 60%),
+      var(--canvas);
+  }
+  .card { background: var(--card-bg); border: 1px solid var(--line); border-radius: var(--card-radius); min-width: 0; }
+  .col { display: flex; flex-direction: column; gap: var(--card-gap); min-height: 0; }
+  .servers { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 0; }
+  .srv { width: 34px; height: 34px; border-radius: 50%; background: #2a2724; position: relative; flex: none; }
+  .srv.home { background: var(--accent); }
+  .srv.sel::before { content: ""; position: absolute; left: -11px; top: 7px; width: 4px; height: 20px; border-radius: 4px; background: var(--accent); }
+  .srv.ring { box-shadow: 0 0 0 2px #0000, 0 0 0 3px #8a6dd8; }
+  .channels { flex: 1; padding: 12px 10px; border-bottom-left-radius: var(--card-radius-inner); border-bottom-right-radius: var(--card-radius-inner); }
+  .chan { padding: 6px 10px; border-radius: 999px; margin-bottom: 3px; color: var(--text-4); }
+  .chan.sel { color: var(--text-1); background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+  .chan.nitro { color: #b9a6f0; }
+  .voice, .user { padding: 10px; border-radius: var(--card-radius-inner); }
+  .user { border-bottom-left-radius: var(--card-radius); border-bottom-right-radius: var(--card-radius); display: flex; align-items: center; gap: 8px; }
+  .voice b { color: #8bbf94; font-weight: 600; }
+  .pills { display: flex; gap: 6px; margin-top: 8px; }
+  .pill { flex: 1; height: 20px; border-radius: 999px; background: var(--panel-2); }
+  .ava { width: 24px; height: 24px; border-radius: 50%; background: #3a3632; flex: none; }
+  .ava.deco { box-shadow: 0 0 0 2px #d8b46d; }
+  .center { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+  .head { height: var(--header-height); display: flex; gap: var(--card-gap); }
+  .head .card { display: flex; align-items: center; padding: 0 14px; }
+  .head .name { border-radius: var(--card-radius) var(--card-radius-inner) var(--card-radius-inner) var(--card-radius); color: var(--text-1); font-weight: 600; }
+  .head .tools { flex: 1; justify-content: flex-end; gap: 10px; border-radius: var(--card-radius-inner) var(--card-radius) var(--card-radius) var(--card-radius-inner); }
+  .stage:not(.split) .head { gap: 0; }
+  .stage:not(.split) .head .name { border-right: none; border-radius: var(--card-radius) 0 0 var(--card-radius); }
+  .stage:not(.split) .head .tools { border-left: none; border-radius: 0 var(--card-radius) var(--card-radius) 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-4); }
+  .dot.y { background: #b49a5e; } .dot.g { background: #6e9a77; } .dot.r { background: #b8655a; }
+  .stage:not(.wc) .dot.y, .stage:not(.wc) .dot.g, .stage:not(.wc) .dot.r { background: var(--text-4); border-radius: 2px; }
+  .chatwrap { flex: 1; display: flex; flex-direction: column; gap: var(--card-gap); min-height: 0; }
+  .msgs { flex: 1; padding: 14px; border-radius: var(--card-radius) var(--card-radius) var(--card-radius-inner) var(--card-radius-inner); display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+  .msg { display: flex; gap: 10px; }
+  .msg .lines { flex: 1; }
+  .msg .who { color: var(--text-1); font-weight: 600; margin-bottom: 4px; }
+  .bar { height: 7px; border-radius: 4px; background: #2a2724; margin-bottom: 5px; }
+  .bar.nm { background: #4a4540; height: 9px; margin: 2px 0 8px; }
+  .user .bar.nm { margin: 0; }
+  .bar.link { background: color-mix(in srgb, var(--accent) 55%, transparent); width: 60%; }
+  .input { height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-radius: var(--card-radius-inner) var(--card-radius-inner) var(--card-radius) var(--card-radius); color: var(--text-4); }
+  .input .sp { flex: 1; }
+  .ib { width: 16px; height: 16px; border-radius: 4px; background: #3a3632; }
+  .ib.gift { background: #b9a6f0; } .ib.gif { background: #8fb3d9; } .ib.stk { background: #d9a58f; }
+  .members { padding: 12px 10px; display: flex; flex-direction: column; gap: 8px; }
+  .members h4 { margin: 4px 0 2px; font-size: 10px; letter-spacing: 0.06em; color: var(--text-4); font-weight: 600; text-transform: uppercase; }
+  .mem { display: flex; align-items: center; gap: 8px; }
+  .mem .bar { flex: 1; margin: 0; }
+  .activity { border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 10px; padding: 8px; color: var(--text-4); }
+  .gear {
+    position: absolute; right: 18px; bottom: 18px; width: 48px; height: 48px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--accent); color: #140c08; cursor: pointer;
+    display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  .gear svg { width: 24px; height: 24px; }
+  .hint { color: var(--ink-3); font-size: 13px; margin: 10px 2px 0; }
+
+  /* hide toggles in the preview */
+  .stage.h-nitro .nitro, .stage.h-chat .ib.gift, .stage.h-chat .ib.gif, .stage.h-chat .ib.stk,
+  .stage.h-act .activity, .stage.h-act .srv.discover { display: none; }
+  .stage.h-deco .ava.deco { box-shadow: none; }
+  .stage.h-deco .srv.ring { box-shadow: none; }
+  .stage:not(.cards) .col { gap: 0; }
+  .stage:not(.cards) .channels { border-radius: var(--card-radius) var(--card-radius) 0 0; border-bottom: none; }
+  .stage:not(.cards) .voice, .stage:not(.cards) .user { border-radius: 0; border-top: none; }
+  .stage:not(.cards) .user { border-radius: 0 0 var(--card-radius) var(--card-radius); }
+
+  /* ── settings modal ───────────────────────────────────────────────── */
+  dialog {
+    width: min(620px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 32px));
+    padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--ink);
+    box-shadow: 0 30px 80px rgba(0,0,0,.6); overflow: hidden;
+  }
+  dialog::backdrop { background: rgba(5, 4, 3, 0.35); }
+  .mhead { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 0; }
+  .mhead h2 { margin: 0; font-size: 17px; }
+  .x { background: none; border: none; color: var(--ink-3); cursor: pointer; font-size: 22px; line-height: 1; padding: 4px 8px; border-radius: 8px; }
+  .x:hover { color: var(--ink); background: var(--panel-2); }
+  .tabs { display: flex; gap: 4px; padding: 12px 14px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { background: none; border: none; color: var(--ink-3); font: inherit; font-size: 14px; padding: 10px 12px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--clay); }
+  .pane { padding: 6px 18px 18px; overflow-y: auto; max-height: calc(min(760px, 100vh - 32px) - 150px); }
+  .pane[hidden] { display: none; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row .t { font-size: 14px; }
+  .row .d { color: var(--ink-3); font-size: 12.5px; margin-top: 2px; }
+  .switch { position: relative; width: 40px; height: 22px; flex: none; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: #34312d; pointer-events: none; }
+  .switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #cfc9bd; }
+  .switch input:checked + span { background: var(--clay); }
+  .switch input:checked + span::after { left: 21px; background: #fff; }
+  .switch input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 2px; }
+  input[type="range"] { width: 160px; accent-color: var(--clay); }
+  .val { min-width: 54px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .rangewrap { display: flex; align-items: center; gap: 10px; }
+  input[type="color"] { width: 40px; height: 28px; border: 1px solid var(--line); border-radius: 8px; background: none; padding: 0 2px; cursor: pointer; }
+  select { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; }
+  .swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .sw[aria-pressed="true"] { border-color: var(--ink); }
+  textarea { width: 100%; min-height: 150px; resize: vertical; background: #0d0c0b; color: #e4dfd4; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 12px/1.5 "Cascadia Code", Consolas, monospace; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .note { color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
+  .note code { background: var(--panel-2); padding: 1px 5px; border-radius: 5px; color: var(--ink-2); }
+  .mfoot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  footer { text-align: center; color: var(--ink-3); font-size: 12.5px; padding: 16px; }
+
+  @media (max-width: 760px) {
+    .stage { grid-template-columns: 44px 1fr; aspect-ratio: auto; min-height: 420px; }
+    .stage .members, .stage .col { display: none; }
+    .srv { width: 28px; height: 28px; }
+    header.site { flex-direction: column; align-items: flex-start; }
+    input[type="range"] { width: 110px; }
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <div>
+    <h1>Ember Configurator</h1>
+    <p>Choose what Ember hides, how it's laid out and its colours. Then copy the snippet or download your own theme file.</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="https://github.com/mihaissh/ember-discord">GitHub</a>
+    <button class="btn primary" id="openTop" type="button">Open settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="stage glow split cards wc h-nitro h-chat h-act h-deco" id="stage" aria-label="Live preview of the theme">
+    <div class="card servers">
+      <div class="srv home"></div>
+      <div class="srv sel"></div>
+      <div class="srv ring"></div>
+      <div class="srv"></div>
+      <div class="srv"></div>
+      <div class="srv discover" style="background:#24352c"></div>
+    </div>
+    <div class="col">
+      <div class="card channels">
+        <div class="chan nitro">✦ Nitro</div>
+        <div class="chan nitro">✦ Shop</div>
+        <div class="chan"># announcements</div>
+        <div class="chan sel"># general</div>
+        <div class="chan"># clips</div>
+        <div class="chan">🔊 Lounge</div>
+      </div>
+      <div class="card voice"><b>Voice Connected</b><div class="pills"><span class="pill"></span><span class="pill"></span><span class="pill"></span><span class="pill"></span></div></div>
+      <div class="card user"><span class="ava deco"></span><span class="bar nm" style="width:70px"></span></div>
+    </div>
+    <div class="center">
+      <div class="head">
+        <div class="card name"># general</div>
+        <div class="card tools"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="width:10px"></span><span class="dot y"></span><span class="dot g"></span><span class="dot r"></span></div>
+      </div>
+      <div class="chatwrap">
+        <div class="card msgs">
+          <div class="msg"><span class="ava deco"></span><div class="lines"><div class="bar nm" style="width:90px"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:45%"></div></div></div>
+          <div class="msg"><span class="ava"></span><div class="lines"><div class="bar nm" style="width:70px"></div><div class="bar link"></div><div class="bar" style="width:55%"></div></div></div>
+          <div class="msg"><span class="ava"></span><div class="lines"><div class="bar nm" style="width:60px"></div><div class="bar" style="width:80%"></div></div></div>
+        </div>
+        <div class="card input"><span>＋</span><span class="sp">Message #general</span><span class="ib gift"></span><span class="ib gif"></span><span class="ib stk"></span><span class="ib"></span></div>
+      </div>
+    </div>
+    <div class="card members">
+      <div class="activity">Activity — 3 playing</div>
+      <h4>Online — 6</h4>
+      <div class="mem"><span class="ava deco"></span><span class="bar"></span></div>
+      <div class="mem"><span class="ava"></span><span class="bar"></span></div>
+      <div class="mem"><span class="ava"></span><span class="bar"></span></div>
+      <h4>Offline — 15</h4>
+      <div class="mem" style="opacity:.5"><span class="ava"></span><span class="bar"></span></div>
+    </div>
+    <button class="gear" id="gear" type="button" aria-label="Open Ember settings" title="Ember settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+  <p class="hint">The preview updates as you change settings. Click the gear to open them.</p>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="mhead"><h2 id="dlgTitle">Ember settings</h2><button class="x" id="close" type="button" aria-label="Close">×</button></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="hide" type="button">Show / hide</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="layout" type="button">Layout</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="colours" type="button">Colours</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="export" type="button">Install</button>
+  </div>
+
+  <div class="pane" data-pane="hide" role="tabpanel">
+    <div class="row"><div><div class="t">Hide Nitro, Shop and Quests</div><div class="d">Shop and Quests links, gift button, Nitro offer badges</div></div><label class="switch"><input type="checkbox" data-var="--hide-nitro" data-cls="h-nitro" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Hide chat bar extras</div><div class="d">Gift, GIF, sticker and Apps buttons (emoji stays)</div></div><label class="switch"><input type="checkbox" data-var="--hide-chat-buttons" data-cls="h-chat" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Hide activity</div><div class="d">Member list Activity section, Active Now, Discover and Download buttons</div></div><label class="switch"><input type="checkbox" data-var="--hide-activity" data-cls="h-act" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Hide decorations</div><div class="d">Avatar decorations, nameplates, profile effects</div></div><label class="switch"><input type="checkbox" data-var="--hide-decorations" data-cls="h-deco" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Hide help button</div><div class="d">The ? icon in the top bar</div></div><label class="switch"><input type="checkbox" data-var="--hide-help" checked><span></span></label></div>
+  </div>
+
+  <div class="pane" data-pane="layout" role="tabpanel" hidden>
+    <div class="row"><div><div class="t">Card layout</div><div class="d">Every panel is a rounded card; channel list, voice and user stack together</div></div><label class="switch"><input type="checkbox" data-var="--card-panels" data-cls="cards" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Two-panel channel header</div><div class="d">Channel name on the left, search and actions on the right</div></div><label class="switch"><input type="checkbox" data-var="--split-header" data-cls="split" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Coloured window buttons</div><div class="d">Muted yellow / green / red dots for minimise, maximise, close</div></div><label class="switch"><input type="checkbox" data-var="--custom-window-controls" data-cls="wc" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Background glow</div><div class="d">Soft accent glow behind the cards (painted once)</div></div><label class="switch"><input type="checkbox" data-var="--canvas-glow" data-cls="glow" checked><span></span></label></div>
+    <div class="row"><div><div class="t">Space between panels</div></div><div class="rangewrap"><input type="range" min="0" max="24" step="1" value="10" data-var="--gap" data-unit="px"><span class="val"></span></div></div>
+    <div class="row"><div><div class="t">Corner roundness</div></div><div class="rangewrap"><input type="range" min="0" max="28" step="1" value="18" data-var="--card-radius" data-unit="px"><span class="val"></span></div></div>
+    <div class="row"><div><div class="t">Gap inside stacks</div></div><div class="rangewrap"><input type="range" min="0" max="12" step="1" value="3" data-var="--card-gap" data-unit="px"><span class="val"></span></div></div>
+    <div class="row"><div><div class="t">Header height</div></div><div class="rangewrap"><input type="range" min="36" max="60" step="1" value="44" data-var="--header-height" data-unit="px"><span class="val"></span></div></div>
+    <div class="row"><div><div class="t">Message width</div><div class="d">Full width, or a centred reading column</div></div><select data-var="--chat-width"><option value="none">Full width</option><option value="900px">900 px</option><option value="1040px">1040 px</option><option value="1200px">1200 px</option></select></div>
+    <div class="row"><div><div class="t">Font</div><div class="d">Fonts already on your computer, so nothing downloads</div></div><select data-var="--font"><option value="'Segoe UI Variable Text'">Segoe UI Variable</option><option value="''">Discord default</option><option value="'Inter'">Inter (if installed)</option><option value="system-ui">System UI</option></select></div>
+  </div>
+
+  <div class="pane" data-pane="colours" role="tabpanel" hidden>
+    <div class="row"><div><div class="t">Accent</div><div class="d">Links, buttons, selected channel, focus ring, glow</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="swatches" id="swatches"></div>
+        <input type="color" id="accent" value="#d97757" aria-label="Custom accent colour">
+      </div>
+    </div>
+    <div class="row"><div><div class="t">Card colour</div><div class="d">Background of every panel</div></div><input type="color" data-var="--card-bg" value="#151412" aria-label="Card colour"></div>
+    <div class="row"><div><div class="t">Background colour</div><div class="d">Behind the cards</div></div><input type="color" data-var="--canvas" value="#090807" aria-label="Background colour"></div>
+  </div>
+
+  <div class="pane" data-pane="export" role="tabpanel" hidden>
+    <p class="note"><b>Quickest:</b> keep Ember installed and paste this snippet into QuickCSS. In Vencord that's <code>Settings → Vencord → Themes → Edit QuickCSS</code>; make sure <code>Enable Custom CSS</code> is on in Vencord's settings. Only the settings you changed are listed.</p>
+    <textarea id="snippet" readonly spellcheck="false" aria-label="QuickCSS snippet"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="copy" type="button">Copy snippet</button>
+      <button class="btn" id="download" type="button">Download my ember.theme.css</button>
+    </div>
+    <p class="note" id="dlnote">The download takes the latest Ember from GitHub and saves your settings straight into it. Put it in your themes folder in place of the old file. That works in BetterDiscord too.</p>
+  </div>
+
+  <div class="mfoot">
+    <button class="btn" id="reset" type="button">Reset to defaults</button>
+    <button class="btn primary" id="done" type="button">Done</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<footer>Ember by mihaiSSH · colours inspired by Claude's palette · <a href="https://github.com/mihaissh/ember-discord">source</a></footer>
+
+<script>
+(() => {
+  const RAW = "https://raw.githubusercontent.com/mihaissh/ember-discord/main/ember.theme.css";
+  const STORE = "ember-config-v1";
+  const ACCENTS = ["#d97757", "#e0a84f", "#7fb08a", "#6fa3d6", "#a98be0", "#e07a9a", "#cfc9bd"];
+  const stage = document.getElementById("stage");
+  const dlg = document.getElementById("dlg");
+  const controls = [...dlg.querySelectorAll("[data-var]")];
+  const accentInput = document.getElementById("accent");
+  const defaults = {};
+  controls.forEach(c => { defaults[c.dataset.var] = read(c); });
+  defaults.accent = accentInput.value;
+
+  function read(c) {
+    if (c.type === "checkbox") return c.checked ? "on" : "off";
+    if (c.type === "range") return c.value + (c.dataset.unit || "");
+    return c.value;
+  }
+  function write(c, v) {
+    if (c.type === "checkbox") c.checked = v === "on";
+    else if (c.type === "range") c.value = parseFloat(v);
+    else c.value = v;
+  }
+  function accentScale(a) {
+    return {
+      "--accent-1": `color-mix(in oklab, ${a}, white 28%)`,
+      "--accent-2": a,
+      "--accent-3": `color-mix(in oklab, ${a}, black 8%)`,
+      "--accent-4": `color-mix(in oklab, ${a}, black 17%)`,
+      "--accent-5": `color-mix(in oklab, ${a}, black 28%)`
+    };
+  }
+  function state() {
+    const s = {};
+    controls.forEach(c => s[c.dataset.var] = read(c));
+    s.accent = accentInput.value;
+    return s;
+  }
+  function changed(s) {
+    return Object.keys(s).filter(k => s[k] !== defaults[k]);
+  }
+
+  function render() {
+    const s = state();
+    controls.forEach(c => {
+      if (c.dataset.cls) stage.classList.toggle(c.dataset.cls, c.checked);
+      if (c.type === "range") c.nextElementSibling.textContent = c.value + (c.dataset.unit || "");
+    });
+    ["--gap", "--card-radius", "--card-gap", "--header-height", "--card-bg", "--canvas"].forEach(v => stage.style.setProperty(v, s[v]));
+    stage.style.setProperty("--accent", s.accent);
+    stage.style.fontFamily = s["--font"] === "''" ? "" : s["--font"] + ", system-ui, sans-serif";
+    document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c.toLowerCase() === s.accent.toLowerCase())));
+    document.getElementById("snippet").value = snippet(s);
+    try { localStorage.setItem(STORE, JSON.stringify(s)); } catch (e) {}
+  }
+
+  function snippet(s) {
+    const keys = changed(s);
+    if (!keys.length) return "/* Ember: everything is on its defaults, nothing to paste. */";
+    const body = keys.filter(k => k.startsWith("--")).map(k => `  ${k}: ${s[k]};`);
+    let out = "/* Ember settings: paste into QuickCSS (made at the Ember configurator) */\n";
+    if (body.length) out += "html body {\n" + body.join("\n") + "\n}\n";
+    if (keys.includes("accent")) {
+      const sc = accentScale(s.accent);
+      out += "html:root {\n" + Object.entries(sc).map(([k, v]) => `  ${k}: ${v};`).join("\n") + "\n}\n";
+    }
+    return out;
+  }
+
+  async function download() {
+    const s = state();
+    const note = document.getElementById("dlnote");
+    let css;
+    try {
+      const r = await fetch(RAW, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      css = await r.text();
+    } catch (e) {
+      note.textContent = "Couldn't reach GitHub just now. Use the QuickCSS snippet instead, or try again in a moment.";
+      return;
+    }
+    const end = css.indexOf("END OF CONFIG");
+    let head = end > 0 ? css.slice(0, end) : css;
+    const tail = end > 0 ? css.slice(end) : "";
+    const set = (name, val) => {
+      const re = new RegExp("(\\n\\s*" + name.replace(/[-]/g, "\\-") + ":\\s*)[^;]+;");
+      head = head.replace(re, (m, p) => p + val + ";");
+    };
+    changed(s).forEach(k => { if (k.startsWith("--")) set(k, s[k]); });
+    if (changed(s).includes("accent")) Object.entries(accentScale(s.accent)).forEach(([k, v]) => set(k, v));
+    const blob = new Blob([head + tail], { type: "text/css" });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "ember.theme.css" });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast("Downloaded ember.theme.css");
+  }
+
+  function toast(t) {
+    const el = document.getElementById("toast");
+    el.textContent = t; el.classList.add("show");
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800);
+  }
+
+  // swatches
+  const sw = document.getElementById("swatches");
+  ACCENTS.forEach(c => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "sw"; b.dataset.c = c; b.style.background = c;
+    b.setAttribute("aria-label", "Accent " + c);
+    b.addEventListener("click", () => { accentInput.value = c; render(); });
+    sw.appendChild(b);
+  });
+
+  // tabs
+  dlg.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+    dlg.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+    dlg.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== t.dataset.tab);
+  }));
+
+  // wiring
+  controls.forEach(c => c.addEventListener("input", render));
+  accentInput.addEventListener("input", render);
+  const open = () => { if (!dlg.open) dlg.showModal(); };
+  document.getElementById("gear").addEventListener("click", open);
+  document.getElementById("openTop").addEventListener("click", open);
+  document.getElementById("close").addEventListener("click", () => dlg.close());
+  document.getElementById("done").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+  document.getElementById("reset").addEventListener("click", () => {
+    controls.forEach(c => write(c, defaults[c.dataset.var]));
+    accentInput.value = defaults.accent; render(); toast("Back to defaults");
+  });
+  document.getElementById("copy").addEventListener("click", async () => {
+    const v = document.getElementById("snippet").value;
+    try { await navigator.clipboard.writeText(v); toast("Snippet copied"); }
+    catch (e) { const ta = document.getElementById("snippet"); ta.select(); document.execCommand("copy"); toast("Snippet copied"); }
+  });
+  document.getElementById("download").addEventListener("click", download);
+
+  // restore
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) || "null");
+    if (saved) {
+      controls.forEach(c => { if (saved[c.dataset.var] != null) write(c, saved[c.dataset.var]); });
+      if (saved.accent) accentInput.value = saved.accent;
+    }
+  } catch (e) {}
+  render();
+})();
+</script>
+</body>
+</html>

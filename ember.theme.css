@@ -1,7 +1,8 @@
 /**
  * @name Ember
  * @description A dark, fast Discord theme with warm clay accents inspired by Claude's colour palette. Floating panels, zero animations, zero blur, no remote imports, fully configurable.
- * @author Mihai
+ * @author mihaiSSH
+ * @website https://github.com/mihaissh/ember-discord
  * @version 1.0.0
  *
  * Layout selectors and Discord colour-variable mapping adapted from
@@ -13,22 +14,33 @@
  */
 
 /* ╔══════════════════════════════════════════════════════════════════╗
-   ║  CONFIG: edit anything in this block. Toggles take on / off.      ║
+   ║  CONFIG: edit here, or use the configurator (see README).        ║
    ╚══════════════════════════════════════════════════════════════════╝ */
 body {
   /* ── typography (local fonts only: zero download) ─────────────────── */
-  --font: 'Segoe UI Variable Text';         /* '' = Discord default (gg sans) */
-  --code-font: 'Cascadia Code';             /* '' = Discord default            */
+  --font: 'Segoe UI Variable Text';         /* local system font; '' = Discord default */
+  --code-font: 'Cascadia Code';             /* local system font; '' = Discord default */
   font-weight: 400;
 
   /* ── layout ───────────────────────────────────────────────────────── */
   --gap: 10px;                    /* space between floating panels            */
   --border-thickness: 1px;        /* panel border                             */
   --divider-thickness: 3px;       /* unread divider + highlighted-message edge */
-  --chat-width: 1040px;           /* centred reading column; none = full width */
+  --chat-width: none;             /* full width; e.g. 1040px = centred reading column */
   --chatbar-height: 48px;
   --custom-chatbar: separated;    /* off | separated (floating pill chat bar)  */
   --small-user-panel: on;         /* on: user panel only under channel list    */
+
+  /* ── user / voice panel ──────────────────────────────────────────── */
+  --card-panels: on;              /* on: voice + user panel as stacked cards  */
+  --card-radius: 18px;            /* outer corners of the card stack           */
+  --card-radius-inner: 6px;       /* corners where two cards meet              */
+  --card-gap: 3px;
+  --card-bg: #151412;
+
+  --split-header: on;              /* on: channel header as two panels           */
+  --header-height: 44px;           /* channel header row                         */
+  --header-trailing-space: 140px;  /* room for inbox + window dots on the right  */
 
   /* ── top bar ──────────────────────────────────────────────────────── */
   --top-bar-height: var(--gap);   /* 36px = Discord default                    */
@@ -52,13 +64,10 @@ body {
   --dms-background-color: linear-gradient(135deg, var(--accent-3), var(--accent-5));
 
   /* ── canvas ───────────────────────────────────────────────────────── */
+  --canvas: #090807;               /* app background behind the cards */
   --canvas-glow: on;              /* static clay glow behind panels (painted once) */
   --background-image: off;        /* on: use the image below as the canvas     */
   --background-image-url: url('');
-
-  /* ── performance ──────────────────────────────────────────────────── */
-  --animations: off;              /* off = every animation & transition disabled */
-  --contain-lists: on;            /* isolate message/member rows from relayouts */
 
   /* ── debloat ──────────────────────────────────────────────────────── */
   --hide-nitro: on;               /* Nitro, Shop, Quests, gift, upsell banners */
@@ -94,8 +103,8 @@ body {
   --accent-4: #b5573a;            /* hovered              */
   --accent-5: #9c4a31;            /* pressed              */
   --accent-new: var(--accent-2);  /* pings, unread badges */
-  --mention: linear-gradient(to right, hsla(15, 63%, 60%, 0.12) 35%, transparent);
-  --mention-hover: linear-gradient(to right, hsla(15, 63%, 60%, 0.07) 35%, transparent);
+  --mention: linear-gradient(to right, color-mix(in srgb, var(--accent-2) 12%, transparent) 35%, transparent);
+  --mention-hover: linear-gradient(to right, color-mix(in srgb, var(--accent-2) 7%, transparent) 35%, transparent);
   --reply: linear-gradient(to right, hsla(40, 10%, 70%, 0.08) 35%, transparent);
   --reply-hover: linear-gradient(to right, hsla(40, 10%, 70%, 0.05) 35%, transparent);
 
@@ -109,7 +118,7 @@ body {
   /* ── borders ──────────────────────────────────────────────────────── */
   --border-light: hsla(28, 14%, 60%, 0.06);
   --border: hsla(28, 14%, 60%, 0.10);
-  --border-hover: hsla(15, 63%, 60%, 0.32);   /* panels glow clay on hover */
+  --border-hover: color-mix(in srgb, var(--accent-2) 32%, transparent);   /* panels glow clay on hover */
   --button-border: hsla(0, 0%, 100%, 0.08);
 
   /* ── base colours ─────────────────────────────────────────────────── */
@@ -668,9 +677,7 @@ body {
     --font-code: var(--code-font), 'gg mono', 'Source Code Pro', Consolas, Monaco, monospace;
 }
 
-[class*='scroll'] {
-    will-change: scroll-position;
-}
+
 .burstGlow__23977 {
     display: none;
 }
@@ -1866,20 +1873,6 @@ body { --custom-app-top-bar-height: var(--top-bar-height); }
         display: none;
     }
 
-    /* Hide trailing in VC wrapper */
-    .base__5e434,
-    .popout__0bd4a {
-        &:has(:is(& > .content__5e434 > .page__5e434 .chat_f75fb0, & > .content__0bd4a .root) > .video_cb9592:not(.sidebarOpen_cb9592) .callContainer_cb9592 > .root_bfe55a.idle_bfe55a)
-            .trailing_c38106 {
-            transform: translateY(-8px);
-            opacity: 0;
-
-            &:hover {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-    }
 }
 
 @property --top-bar-title-position {
@@ -2129,35 +2122,35 @@ body { container-name: body; -webkit-font-smoothing: antialiased; }
 @container body style(--canvas-glow: on) and style(--background-image: off) {
   #app-mount .bg__960e4 {
     background:
-      radial-gradient(1100px 620px at 0% 0%, hsla(15, 63%, 60%, 0.09), transparent 62%),
-      radial-gradient(900px 520px at 100% 100%, hsla(15, 63%, 60%, 0.045), transparent 60%),
-      var(--bg-3);
+      radial-gradient(1100px 620px at 0% 0%, color-mix(in srgb, var(--accent-2) 9%, transparent), transparent 62%),
+      radial-gradient(900px 520px at 100% 100%, color-mix(in srgb, var(--accent-2) 4.5%, transparent), transparent 60%),
+      var(--canvas);
   }
 }
 
-/* centred reading column, Claude-style */
-[data-list-id="chat-messages"] {
-  max-width: var(--chat-width);
-  margin-inline: auto;
-  width: 100%;
+/* optional centred reading column: only applied when --chat-width is set */
+@container body not style(--chat-width: none) {
+  [data-list-id="chat-messages"] {
+    max-width: var(--chat-width);
+    margin-inline: auto;
+    width: 100%;
+  }
 }
 .form_f75fb0 {
-  max-width: var(--chat-width);
-  margin-inline: auto;
   width: 100%;
   box-sizing: border-box;
 }
 
 /* selected channel: clay rail */
-.wrapper__2ea32[class*="modeSelected"] .link__2ea32 {
+.wrapper__2ea32.modeSelected__2ea32 .link__2ea32 {
   box-shadow: inset 3px 0 0 var(--accent-2);
-  background: hsla(15, 63%, 60%, 0.10);
+  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
 }
 
 /* chat bar: clay ring while typing */
 #app-mount .channelTextArea_f75fb0:focus-within {
-  border-color: hsla(15, 63%, 60%, 0.5) !important;
-  box-shadow: 0 0 0 3px hsla(15, 63%, 60%, 0.08);
+  border-color: color-mix(in srgb, var(--accent-2) 50%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-2) 8%, transparent);
 }
 
 /* headings a touch tighter */
@@ -2182,64 +2175,64 @@ h1, h2, h3, .title_c38106, .channelName__2ea32 { letter-spacing: -0.01em; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--bg-1); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-track { background: transparent; }
-::selection { background: hsla(15, 63%, 60%, 0.32); }
+::selection { background: color-mix(in srgb, var(--accent-2) 32%, transparent); }
 
-/* Ember window controls: muted dots that light up on hover */
+/* Ember window controls: muted traffic lights, full colour on hover */
 @container body style(--custom-window-controls: on) {
-  .winButtons_c38106 .winButton_c38106.winButton_c38106::after { background-color: var(--text-5) !important; }
-  .winButtons_c38106 .winButtonClose_c38106.winButtonClose_c38106:hover::after { background-color: var(--red-2) !important; }
-  .winButtons_c38106 .winButtonMinMax_c38106.winButtonMinMax_c38106:hover::after { background-color: var(--accent-2) !important; }
-  .winButton_c38106:hover::after { filter: none; }
+  .winButtons_c38106 .winButtonMinMax_c38106.winButtonMinMax_c38106:nth-child(1)::after {
+    background-color: color-mix(in oklab, var(--yellow-3) 55%, var(--bg-1)) !important;
+  }
+  .winButtons_c38106 .winButtonMinMax_c38106.winButtonMinMax_c38106:nth-child(2)::after {
+    background-color: color-mix(in oklab, var(--green-3) 55%, var(--bg-1)) !important;
+  }
+  .winButtons_c38106 .winButtonClose_c38106.winButtonClose_c38106::after {
+    background-color: color-mix(in oklab, var(--red-2) 60%, var(--bg-1)) !important;
+  }
+  .winButtons_c38106 .winButtonMinMax_c38106.winButtonMinMax_c38106:nth-child(1):hover::after { background-color: var(--yellow-2) !important; }
+  .winButtons_c38106 .winButtonMinMax_c38106.winButtonMinMax_c38106:nth-child(2):hover::after { background-color: var(--green-2) !important; }
+  .winButtons_c38106 .winButtonClose_c38106.winButtonClose_c38106:hover::after { background-color: var(--red-1) !important; }
+  .winButton_c38106:hover::after { filter: none !important; }
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
    ║  PERFORMANCE                                                      ║
    ╚══════════════════════════════════════════════════════════════════╝ */
-@container body style(--animations: off) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-delay: 0s !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
-    scroll-behavior: auto !important;
-  }
-  [class*="spinner_"], [class*="spinner_"] * {
-    animation-duration: 1s !important;
-    animation-iteration-count: infinite !important;
-  }
+/* Plain rule on purpose (not inside a style query): a style query here would
+   tag every element as container-dependent, so each change Discord makes to
+   <body> would restyle the whole app. Delete this block to get animations back. */
+*, *::before, *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
 }
-/* blur is the most expensive effect Discord uses: always off */
-#app-mount * { backdrop-filter: none !important; }
 
-@container body style(--contain-lists: on) {
-  li[id^="chat-messages-"],
-  .member_c8ffbb,
-  .member__5d473,
-  .channel__972a0 {
-    contain: layout style;
-  }
+/* containment: changes inside one column or row never relayout the rest (plain rule: matches many elements) */
+.guilds__5e434,
+.sidebarList__5e434,
+.container_c8ffbb,
+.messagesWrapper__36d07 {
+  contain: layout style;
+}
+li[id^="chat-messages-"],
+.member_c8ffbb,
+.member__5d473,
+.channel__972a0 {
+  contain: layout style;
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
    ║  DEBLOAT                                                          ║
    ╚══════════════════════════════════════════════════════════════════╝ */
 @container body style(--hide-nitro: on) {
-  li:has(a[href="/store"]),
-  li:has(a[href="/shop"]),
-  li:has(a[href="/quest-home"]),
+  .privateChannels_e6b769 li:has(> * > a[href="/store"]),
+  .privateChannels_e6b769 li:has(> * > a[href="/shop"]),
+  .privateChannels_e6b769 li:has(> * > a[href="/quest-home"]),
   a[href="/store"],
   a[href="/shop"],
   a[href="/quest-home"],
-  [class*="giftButton"],
-  [class*="premiumFeatureBorder"],
-  [class*="upsell"],
-  [class*="Upsell"],
-  [class*="nitroWheel"],
-  [class*="premiumPromo"],
-  [class*="tryItOut"],
-  [class*="questsContainer"],
-  [class*="questPromo"],
   .notice__29487 {
     display: none !important;
   }
@@ -2250,11 +2243,8 @@ h1, h2, h3, .title_c38106, .channelName__2ea32 { letter-spacing: -0.01em; }
   [aria-label="Open GIF picker"],
   [aria-label="Open sticker picker"],
   [aria-label="Apps"],
-  [class*="buttons"] > :has(> [aria-label="Send a gift"]),
-  [class*="buttons"] > :has(> [aria-label="Open GIF picker"]),
-  [class*="buttons"] > :has(> [aria-label="Open sticker picker"]),
-  [class*="buttons"] > :has(> [aria-label="Apps"]),
-  [class*="channelAppLauncher_"],
+  .expression-picker-chat-input-button:has(> [aria-label="Open GIF picker"]),
+  .expression-picker-chat-input-button:has(> [aria-label="Open sticker picker"]),
   .app-launcher-entrypoint {
     display: none !important;
   }
@@ -2264,23 +2254,15 @@ h1, h2, h3, .title_c38106, .channelName__2ea32 { letter-spacing: -0.01em; }
   .nowPlayingColumn__133bf,
   [data-list-item-id="guildsnav___guild-discover-button"],
   [data-list-item-id="guildsnav___app-download-button"],
-  .listItem__650eb:has(> div > [data-list-item-id="guildsnav___guild-discover-button"]),
-  .listItem__650eb:has(> div > [data-list-item-id="guildsnav___app-download-button"]),
-  [class*="activityPanel_"],
-  [class*="activityCard_"] {
+  .activityPanel__5e434 {
     display: none !important;
   }
 }
 
 @container body style(--hide-decorations: on) {
   img[src*="avatar-decoration-presets"],
-  [class*="avatarDecoration_"],
-  [class*="profileEffects_"],
   .container__37e49 .container_df39b2,
-  [class*="nameplated"] .container_df39b2,
-  [class*="nameplated"] > :not([class*="memberInner"]),
-  [class*="nameplated"] video,
-  [class*="nameplated"] img[src*="nameplate"],
+  .nameplated__91a9d > :not(.memberInner__5d473),
   video[src*="nameplates"],
   img[src*="nameplates"] {
     display: none !important;
@@ -2296,17 +2278,13 @@ h1, h2, h3, .title_c38106, .channelName__2ea32 { letter-spacing: -0.01em; }
 
 /* member list: the "Activity" section (header + activity cards) */
 @container body style(--hide-activity: on) {
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
-  [class*="membersWrap"] [class*="membersGroup"]:has(> [class*="headerContainerClickable"]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) {
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe),
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe) + div:not([class]),
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe) + div:not([class]) + div:not([class]),
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe) + div:not([class]) + div:not([class]) + div:not([class]),
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]),
+  .membersWrap_c8ffbb .membersGroup_c8ffbb:has(> .headerContainerClickable__095fe) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) + div:not([class]) {
     display: none !important;
   }
 }
@@ -2335,3 +2313,414 @@ html .theme-midnight {
   --control-primary-background-active: var(--accent-5) !important;
 }
 a[class*="anchor"] { color: var(--accent-1); }
+
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  USER + VOICE PANEL: stacked cards                                ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+@container body style(--card-panels: on) {
+  /* the outer panel becomes a transparent stack */
+  .panels__5e434 {
+    background: transparent !important;
+    border: none !important;
+    backdrop-filter: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-gap);
+  }
+
+  /* each section is its own card; the column reads top-to-bottom as
+     channel list (round top) → voice (joined) → user (round bottom) */
+  .panels__5e434 .wrapper_e131a9,
+  .panels__5e434 > .container__37e49 {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--card-radius-inner) !important;
+    margin: 0 !important;
+    overflow: hidden;
+  }
+  .panels__5e434 > .container__37e49 {
+    border-bottom-left-radius: var(--card-radius) !important;
+    border-bottom-right-radius: var(--card-radius) !important;
+  }
+  .panels__5e434 .container_e131a9 {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .panels__5e434 > :empty { display: none; }
+
+  /* voice card */
+  .container_e131a9 { padding: 10px !important; }
+  .actionButtons_e131a9 { gap: 6px; margin-top: 8px; }
+  .actionButtons_e131a9 .button_e131a9 {
+    border-radius: 999px !important;
+    background: var(--bg-2) !important;
+    color: var(--text-3) !important;
+    border: 1px solid var(--border-light);
+    min-height: 34px;
+  }
+  .actionButtons_e131a9 .button_e131a9:hover {
+    background: var(--bg-1) !important;
+    color: var(--text-1) !important;
+  }
+  .connection_e131a9 button,
+  .connection_e131a9 [role="button"] {
+    border-radius: 999px !important;
+  }
+
+  /* user card */
+  .container__37e49 { padding: 6px 8px !important; }
+  .accountPopoutButtonWrapper__37e49 {
+    border-radius: calc(var(--card-radius-inner) + 4px) !important;
+    padding: 4px 6px !important;
+  }
+  .accountPopoutButtonWrapper__37e49:hover { background: var(--hover) !important; }
+  .buttons__37e49 { gap: 4px; }
+}
+
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  CARD LAYOUT: every main panel gets the same card look            ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+@container body style(--card-panels: on) {
+  .container__89463 > .toolbar__89463,
+  .container__89463 > .contentContainer__89463,
+  .guilds__5e434,
+  .sidebarList__5e434,
+  .chat_f75fb0 > .subtitleContainer_f75fb0,
+  .chatContent_f75fb0,
+  .container_c8ffbb,
+  .content_f75fb0 > .membersWrap_c8ffbb,
+  .container__133bf > .container__9293f,
+  .container_f391e3 > .container__9293f,
+  .homeWrapper__0920e > .container__9293f,
+  .container__01ae2 > .container__9293f,
+  .container_fb64c9 > .container__9293f,
+  .peopleColumn__133bf,
+  .nowPlayingColumn__133bf,
+  .mainPageScroller__80907,
+  .headerBar__1a9ce,
+  .scroller__23746,
+  .container_f391e3 > .content_f75fb0,
+  .shop__6db1d,
+  .content_f75fb0 > aside > .outer_c0bea0,
+  .searchResultsWrap_a98f3b,
+  .container_f369db,
+  .chat_fb64c9,
+  .container_a592e1,
+  .callContainer_cb9592,
+  .wrapper_cb9592.sidebarOpen_cb9592 .callContainer_cb9592,
+  .callContainer__722ff,
+  .chat_f75fb0 > .header_c791b2,
+  .chat_f75fb0 > .scrollerBase_d125d2,
+  .chat_f75fb0 > .header__0b563,
+  .chat_f75fb0 > .container__0b563,
+  .container__8a031 {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--card-radius) !important;
+  }
+
+  /* channel list + user panel stack into one column of cards */
+  .sidebarList__5e434 {
+    margin-bottom: calc(var(--custom-app-panels-height, 0px) + var(--card-gap)) !important;
+    border-bottom-left-radius: var(--card-radius-inner) !important;
+    border-bottom-right-radius: var(--card-radius-inner) !important;
+  }
+
+  /* chat title bar + messages stack */
+  .chat_f75fb0 > .subtitleContainer_f75fb0 {
+    margin-bottom: var(--card-gap) !important;
+    border-bottom-left-radius: var(--card-radius-inner) !important;
+    border-bottom-right-radius: var(--card-radius-inner) !important;
+  }
+  .chat_f75fb0 > .subtitleContainer_f75fb0 + * .chatContent_f75fb0,
+  .chatContent_f75fb0 {
+    border-top-left-radius: var(--card-radius-inner) !important;
+    border-top-right-radius: var(--card-radius-inner) !important;
+  }
+
+  /* friends page title bar + list stack */
+  #app-mount .container__133bf > .container__9293f {
+    margin-bottom: var(--card-gap) !important;
+    border-bottom-left-radius: var(--card-radius-inner) !important;
+    border-bottom-right-radius: var(--card-radius-inner) !important;
+  }
+  .peopleColumn__133bf {
+    border-top-left-radius: var(--card-radius-inner) !important;
+    border-top-right-radius: var(--card-radius-inner) !important;
+  }
+
+  /* floating chat bar matches */
+  #app-mount .channelTextArea_f75fb0 {
+    background-color: var(--card-bg) !important;
+    border-radius: var(--card-radius) !important;
+  }
+}
+
+/* one flat tone inside every card (no darker inner layer).
+   Plain rule, not a style query: variables set on #app-mount inside a style
+   query would make the whole app restyle whenever <body> changes. */
+#app-mount,
+#app-mount .theme-dark,
+#app-mount .theme-darker,
+#app-mount .theme-midnight {
+  --background-base-lower: var(--card-bg) !important;
+  --background-base-low: var(--card-bg) !important;
+  --chat-background-default: var(--card-bg) !important;
+  --background-primary: var(--card-bg) !important;
+  --background-secondary: var(--card-bg) !important;
+}
+@container body style(--card-panels: on) {
+  .chatContent_f75fb0,
+  .messagesWrapper__36d07,
+  .scroller__36d07,
+  .form_f75fb0 {
+    background: transparent;
+  }
+  .chatContent_f75fb0 { background: var(--card-bg) !important; }
+}
+
+/* separated chat bar: messages and message box are two independent cards */
+@container body style(--card-panels: on) and style(--custom-chatbar: separated) {
+  .chatContent_f75fb0 {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  .messagesWrapper__36d07 {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--card-radius) var(--card-radius) var(--card-radius-inner) var(--card-radius-inner) !important;
+  }
+  #app-mount .channelTextArea_f75fb0 {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--card-radius-inner) var(--card-radius-inner) var(--card-radius) var(--card-radius) !important;
+    margin: 0 !important;
+  }
+  /* message box spans the full width of the messages card */
+  .form_f75fb0 { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+  .channelBottomBarArea_f75fb0 { margin-top: var(--card-gap) !important; }
+  .chatContent_f75fb0:has(> .form_f75fb0 > .typing_b88801) .messagesWrapper__36d07::before {
+    background: var(--card-bg);
+  }
+}
+
+/* no hover glow on panels: identical edges everywhere, and nothing repaints on hover */
+@container body style(--card-panels: on) {
+  .messagesWrapper__36d07:hover,
+  #app-mount .channelTextArea_f75fb0:hover,
+  .wrapper__44df5:hover {
+    border-color: var(--border-light) !important;
+  }
+}
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  CHANNEL HEADER: split into two floating panels                   ║
+   ║  left = channel name · right = search + actions + inbox           ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+@container body style(--split-header: on) {
+  /* the old single bar becomes invisible scaffolding */
+  .chat_f75fb0 > .subtitleContainer_f75fb0,
+  .title_f75fb0.container__9293f {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .title_f75fb0 .upperContainer__9293f {
+    gap: var(--card-gap);
+    align-items: stretch;
+    height: 100%;
+  }
+
+  /* panel 1: channel name */
+  .title_f75fb0 .upperContainer__9293f > :first-child {
+    flex: 0 1 auto !important;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--card-radius) var(--card-radius-inner) var(--card-radius-inner) var(--card-radius);
+  }
+
+  /* panel 2: search + actions (+ inbox and window dots, which sit on top of its right edge) */
+  .title_f75fb0 .toolbar__9293f {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+    padding-left: 8px;
+    padding-right: var(--header-trailing-space) !important;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--card-radius-inner) var(--card-radius) var(--card-radius) var(--card-radius-inner);
+  }
+
+  /* reorder: search first, then member list, pins, threads, notifications */
+  .toolbar__9293f > .search__49676 { order: 20; margin: 0 2px 0 0; }
+  .toolbar__9293f > [aria-label*="Member List"] { order: 1; }
+  .toolbar__9293f > [aria-label="Pinned Messages"] { order: 2; }
+  .toolbar__9293f > [aria-label="Threads"] { order: 3; }
+  .toolbar__9293f > [aria-label="Notification Settings"] { order: 4; }
+  .toolbar__9293f > :not(.search__49676):not(.iconWrapper__9293f) { order: 5; }
+  .toolbar__9293f > .iconWrapper__9293f[aria-label*="Member List"] { margin-left: auto !important; }
+
+  /* smaller, quieter icons */
+  .toolbar__9293f > .iconWrapper__9293f,
+  .trailing_c38106 > .iconWrapper__468db {
+    width: 30px !important;
+    height: 30px !important;
+    margin: 0 !important;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .toolbar__9293f > .iconWrapper__9293f svg,
+  .trailing_c38106 svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+  .toolbar__9293f > .iconWrapper__9293f:hover,
+  .trailing_c38106 > .iconWrapper__468db:hover {
+    background: var(--hover);
+  }
+
+  /* search: just an icon until clicked, then expands into a pill.
+     Exact class names only: a :focus-within or :hover rule followed by a
+     [class*=...] selector makes Chrome restyle the WHOLE app on every click
+     and mouse move (that was the server-list / folder stutter). */
+  .toolbar__9293f > .search__49676 {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px;
+    flex: 0 0 auto !important;
+  }
+  .search__49676 .searchBar_c322aa {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    height: 30px;
+    width: 30px !important;
+    padding: 0 !important;
+    cursor: pointer;
+  }
+  .search__49676 .searchBar_c322aa:hover { background: var(--hover) !important; }
+  .search__49676 .searchBar_c322aa > :not(.icon_c322aa) { opacity: 0; }
+  .toolbar__9293f > .search__49676:focus-within {
+    width: 240px !important;
+    max-width: 240px;
+  }
+  .search__49676:focus-within .searchBar_c322aa {
+    width: 240px !important;
+    padding: 0 8px 0 12px !important;
+    background: var(--bg-2) !important;
+  }
+  .search__49676:focus-within .searchBar_c322aa > :not(.icon_c322aa) { opacity: 1; }
+  .toolbar__9293f > [class*="divider"] { display: none; }
+}
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  SYMMETRY: one gap between columns (--gap), one inside stacks     ║
+   ║  (--card-gap), and every outer edge lines up                      ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+@container body style(--card-panels: on) {
+  /* user / voice stack: no hidden padding, so every join is exactly --card-gap */
+  .panels__5e434 { padding: 0 !important; gap: var(--card-gap) !important; row-gap: var(--card-gap) !important; }
+  .panels__5e434 > * + * { margin-top: 0 !important; }
+  .panels__5e434 > *,
+  .panels__5e434 .wrapper_e131a9 { margin: 0 !important; padding: 0 !important; }
+
+  /* header row: same height everywhere, flush with the cards below it */
+  .chat_f75fb0 > .subtitleContainer_f75fb0 {
+    height: var(--header-height) !important;
+    min-height: var(--header-height) !important;
+    margin-bottom: var(--gap) !important;
+    padding: 0 !important;
+  }
+  .title_f75fb0.container__9293f,
+  .title_f75fb0 .upperContainer__9293f {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: var(--header-height) !important;
+    min-height: 0 !important;
+  }
+
+  /* chat column and member list start at the same line */
+  .container_c8ffbb,
+  .content_f75fb0 > .membersWrap_c8ffbb { margin-top: 0 !important; }
+}
+
+/* inbox + window dots: vertically centred in the header's right panel */
+@container body style(--split-header: on) and style(--top-bar-button-position: titlebar) {
+  .trailing_c38106 {
+    top: calc(var(--top-bar-height) + (var(--header-height) - 32px) / 2) !important;
+    right: calc(var(--gap) + 6px) !important;
+  }
+}
+
+/* server list: no rounded clip around the scrolling column (the costliest
+   thing to repaint while scrolling or opening folders); padding keeps the
+   icons clear of the card's round corners instead */
+@container body style(--card-panels: on) {
+  .guilds__5e434 {
+    overflow: visible !important;
+    padding-block: calc(var(--card-radius) / 2) !important;
+    box-sizing: border-box;
+  }
+  .scroller_ef3116 { padding-top: 4px !important; padding-bottom: 4px !important; }
+}
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  ICON STATES: one consistent language everywhere                  ║
+   ║  idle = no background · hover = soft round wash · active = clay   ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+@container body style(--card-panels: on) {
+  /* header icons: selected shows as a clay icon, no bubble */
+  .toolbar__9293f > .iconWrapper__9293f.selected__9293f,
+  .toolbar__9293f > .iconWrapper__9293f.selected__9293f:hover {
+    background: transparent !important;
+  }
+  .toolbar__9293f > .iconWrapper__9293f.selected__9293f svg { color: var(--accent-2) !important; }
+
+
+  /* user panel: each mic / headphone group is ONE pill that highlights as a whole */
+  .audioButtonParent__5e764 {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 999px;
+  }
+  .audioButtonParent__5e764:hover { background: var(--hover) !important; }
+  .audioButtonParent__5e764 button,
+  .audioButtonParent__5e764 button:hover,
+  .audioButtonParent__5e764 button:active {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  /* settings gear: same round wash as the pills */
+  .buttons__37e49 > button {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+  }
+  .buttons__37e49 > button:hover { background: var(--hover) !important; }
+
+  /* voice card buttons: same idea, no outlines */
+  .actionButtons_e131a9 .button_e131a9 { border: none !important; }
+}
+
+/* list rows: pill shaped (plain rule: matches every channel / member row) */
+.wrapper__2ea32 .link__2ea32,
+.channel__972a0 > *,
+.member__5d473 {
+  border-radius: 999px;
+}
